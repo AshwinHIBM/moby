@@ -143,5 +143,7 @@ main() {
 		echo
 	done
 }
+rm -f /etc/docker/daemon.json && touch /etc/docker/daemon.json
+echo "{\"deprecatedCgroupv1\": true}" > /etc/docker/daemon.json
 
 main "$@"
