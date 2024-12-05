@@ -2,7 +2,9 @@ package capabilities
 
 import (
 	"bytes"
+	"fmt"
 	"io"
+	"log"
 	"strings"
 	"testing"
 
@@ -19,9 +21,9 @@ import (
 
 func TestNoNewPrivileges(t *testing.T) {
 	ctx := setupTest(t)
-
+	log.Println("Using debian:bookworm")
 	withFileCapability := `
-		FROM debian:bullseye-slim
+		FROM debian:bookworm-slim
 		RUN apt-get update && apt-get install -y libcap2-bin --no-install-recommends
 		RUN setcap CAP_DAC_OVERRIDE=+eip /bin/cat
 		RUN echo "hello" > /txt && chown 0:0 /txt && chmod 700 /txt
@@ -30,6 +32,7 @@ func TestNoNewPrivileges(t *testing.T) {
 	imageTag := "captest"
 
 	source := fakecontext.New(t, "", fakecontext.WithDockerfile(withFileCapability))
+	log.Println("Created context successfuly.")
 	defer source.Close()
 
 	client := testEnv.APIClient()
@@ -41,6 +44,7 @@ func TestNoNewPrivileges(t *testing.T) {
 			Tags: []string{imageTag},
 		})
 	assert.NilError(t, err)
+	fmt.Println("Built image successfully")
 	_, err = io.Copy(io.Discard, resp.Body)
 	assert.NilError(t, err)
 	resp.Body.Close()
